@@ -1,0 +1,28 @@
+{
+  "name": "pond-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The ocean's server: the authoritative 20 Hz simulation, the ETH ledger, deposits watched on chain, withdrawal vouchers signed for the Arena contract.",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "e2e": "tsx scripts/e2e.mts",
+    "soak": "tsx scripts/soak.mts",
+    "dev:local": "node --import tsx scripts/dev-local.mjs"
+  },
+  "dependencies": {
+    "viem": "^2.56.0",
+    "ws": "^8.18.0",
+    "tsx": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

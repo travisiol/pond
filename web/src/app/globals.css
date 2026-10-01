@@ -1,0 +1,744 @@
+:root {
+  --deep: #04344f;
+  --glass: rgba(3, 27, 43, 0.72);
+  --line: rgba(160, 230, 255, 0.18);
+  --text: #eaf8ff;
+  --dim: #9fc6d6;
+  --aqua: #35e0ff;
+  --gold: #ffd34d;
+  --red: #ff5a4a;
+  --green: #5dff9a;
+  --display: var(--font-display), system-ui, sans-serif;
+  --body: var(--font-body), system-ui, sans-serif;
+  --mono: var(--font-mono), ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--deep);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.stage {
+  position: fixed;
+  inset: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.stage > canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.stage > canvas.playing {
+  cursor: crosshair;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Names and values over the fish */
+.fish-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(3, 27, 43, 0.55);
+  color: var(--text);
+  will-change: transform;
+}
+
+.fish-label.threat {
+  color: #ffd0ca;
+  background: rgba(120, 20, 12, 0.7);
+}
+
+.fish-label.food {
+  color: #d5ffe5;
+  background: rgba(10, 80, 45, 0.6);
+}
+
+.fish-label.mine {
+  color: var(--deep);
+  background: var(--gold);
+  font-weight: 500;
+}
+
+.pop {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--gold);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+  will-change: transform, opacity;
+}
+
+.pop.big {
+  font-size: 26px;
+  color: #fff3c4;
+}
+
+/* Top bar */
+.topbar {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wordmark {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: -0.04em;
+}
+
+.mode {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  color: var(--dim);
+}
+
+.mode.live {
+  color: var(--gold);
+  border-color: rgba(255, 211, 77, 0.5);
+}
+
+.ghost {
+  background: none;
+  border: 0;
+  color: var(--dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+/* What my fish is worth */
+.worth {
+  position: absolute;
+  top: 58px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.worth .label {
+  font-size: 0.78rem;
+  color: var(--dim);
+}
+
+.worth .eth {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(2.2rem, 5.4vw, 3.6rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--gold);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.worth .eth small {
+  font-size: 0.42em;
+  letter-spacing: 0;
+}
+
+.worth .delta {
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.worth .delta.up {
+  color: var(--green);
+}
+
+.worth .delta.down {
+  color: #ffb0a8;
+}
+
+/* Leaderboard */
+.board {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 232px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.board h2 {
+  margin: 0 0 6px;
+  font-family: var(--display);
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
+.board ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: rank;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.board li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1.5px 0;
+  counter-increment: rank;
+  color: var(--dim);
+}
+
+.board li span::before {
+  content: counter(rank) ". ";
+  opacity: 0.6;
+}
+
+.board li b {
+  font-weight: 400;
+  color: var(--text);
+}
+
+.board li.me,
+.board li.me b {
+  color: var(--gold);
+}
+
+.board p {
+  margin: 8px 0 0;
+  font-size: 0.7rem;
+  color: var(--dim);
+}
+
+/* Feed */
+.feed {
+  position: absolute;
+  left: 16px;
+  bottom: 84px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--dim);
+  pointer-events: none;
+}
+
+.feed li {
+  padding: 2px 0;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+.feed b {
+  font-family: var(--mono);
+  font-weight: 400;
+  color: var(--text);
+}
+
+.feed .cash b {
+  color: var(--gold);
+}
+
+.feed .mine {
+  color: var(--text);
+}
+
+/* Cash out and sprint */
+.controls {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  width: min(560px, calc(100% - 24px));
+}
+
+.controls button {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--glass);
+  backdrop-filter: blur(8px);
+  padding: 14px 20px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.cash {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  border-color: rgba(255, 211, 77, 0.6) !important;
+  color: var(--gold);
+}
+
+.cash i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(255, 211, 77, 0.35);
+}
+
+.cash span {
+  position: relative;
+}
+
+.cash.locked {
+  color: var(--dim);
+  border-color: var(--line) !important;
+  cursor: default;
+}
+
+.cash.active {
+  color: #fff;
+}
+
+.sprint {
+  color: var(--aqua);
+}
+
+/* Lobby */
+.lobby {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 70px 14px 18px;
+  overflow: auto;
+  background: radial-gradient(ellipse at center, rgba(2, 20, 32, 0.35), rgba(2, 20, 32, 0.78));
+}
+
+.card {
+  width: min(560px, 100%);
+  padding: clamp(20px, 4vw, 34px);
+  border-radius: 24px;
+  background: rgba(3, 27, 43, 0.86);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+
+.card h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+  font-size: clamp(2.6rem, 9vw, 4.6rem);
+}
+
+.result h1 {
+  font-size: clamp(1.9rem, 6vw, 2.8rem);
+}
+
+.result.won h1 {
+  color: var(--gold);
+}
+
+.result.lost h1 {
+  color: #ffb0a8;
+}
+
+.intro p,
+.result p {
+  margin: 10px 0 0;
+  color: var(--dim);
+  font-size: 1.05rem;
+}
+
+.result b {
+  color: var(--text);
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin: 20px 0 16px;
+  flex-wrap: wrap;
+}
+
+.tabs button {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--dim);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.tabs button[aria-selected="true"] {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--deep);
+}
+
+.three {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--dim);
+}
+
+.three b {
+  display: block;
+  font-family: var(--display);
+  font-size: 1.15rem;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.field {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--dim);
+}
+
+.field input {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 500;
+  color: var(--text);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.primary,
+.secondary {
+  padding: 14px 20px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.primary {
+  flex: 1 1 220px;
+  background: var(--gold);
+  color: var(--deep);
+}
+
+.primary:hover:not(:disabled) {
+  background: #ffe07a;
+}
+
+.secondary {
+  background: none;
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.secondary:hover:not(:disabled) {
+  border-color: var(--text);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fine {
+  margin: 14px 0 0;
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+
+.fine a,
+.link {
+  color: var(--text);
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.error {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  color: #ffb0a8;
+}
+
+.pane table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.pane th,
+.pane td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.pane th {
+  width: 104px;
+  padding-right: 12px;
+  font-family: var(--display);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pane td {
+  color: var(--dim);
+}
+
+.pane > p {
+  margin: 0 0 12px;
+  color: var(--dim);
+}
+
+.balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.balance b {
+  font-family: var(--display);
+  font-size: 1.9rem;
+  color: var(--gold);
+  letter-spacing: -0.03em;
+}
+
+@media (max-width: 700px) {
+  .board {
+    width: 168px;
+    padding: 9px 10px;
+  }
+  .board li:nth-child(n + 6),
+  .board p {
+    display: none;
+  }
+  .three {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .feed {
+    display: none;
+  }
+  .topbar .ghost {
+    display: none;
+  }
+  .worth {
+    max-width: calc(100% - 200px);
+  }
+  .worth .delta {
+    font-size: 0.68rem;
+  }
+  .fish-label {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Radar: what is around the shark, heading up */
+.radar {
+  position: absolute;
+  right: 16px;
+  bottom: 84px;
+  width: 168px;
+  height: 168px;
+}
+
+@media (max-width: 700px) {
+  .radar {
+    width: 112px;
+    height: 112px;
+    right: 10px;
+  }
+}
+
+/* What I can eat, what eats me */
+.worth .limits {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+.worth .limits .food {
+  color: var(--green);
+}
+
+.worth .limits .threat {
+  color: #ff8a7d;
+}
+
+.fish-label.threat,
+.fish-label.food {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* A hunter is close */
+.alarm {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 140px 30px rgba(255, 50, 35, 0.55);
+  animation: alarm 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes alarm {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.warning {
+  position: absolute;
+  left: 50%;
+  top: 16%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(150, 22, 12, 0.88);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* I just ate someone */
+.meal {
+  position: absolute;
+  left: 50%;
+  top: 27%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  letter-spacing: -0.03em;
+  color: #fff;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  animation: meal 2.6s ease-out both;
+}
+
+.meal b {
+  display: block;
+  color: var(--gold);
+  font-size: 1.25em;
+}
+
+@keyframes meal {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.6);
+  }
+  12% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.08);
+  }
+  22% {
+    transform: translateX(-50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-24px);
+  }
+}
+
+/* I was eaten */
+.lobby.lost {
+  background: radial-gradient(ellipse at center, rgba(60, 8, 6, 0.45), rgba(40, 4, 4, 0.86));
+  animation: bitten 0.5s ease-out;
+}
+
+@keyframes bitten {
+  from {
+    background-color: rgba(255, 40, 30, 0.7);
+  }
+  to {
+    background-color: transparent;
+  }
+}

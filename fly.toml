@@ -1,0 +1,27 @@
+# Fly.io alternative to Railway for the game server. `fly launch --no-deploy`
+# picks this up; then `fly volumes create frenzy_data --size 1` and `fly deploy`.
+app = "frenzy-arena"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "server/Dockerfile"
+
+[env]
+  PORT = "8962"
+  DB_PATH = "/data/frenzy.sqlite"
+
+[[mounts]]
+  source = "frenzy_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8962
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[http_service.checks]]
+  path = "/status"
+  interval = "30s"
+  timeout = "5s"

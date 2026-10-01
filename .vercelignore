@@ -1,0 +1,5 @@
+# Vercel only builds the page. The arena server and the contracts never go there.
+server
+contracts
+web/node_modules
+web/.next

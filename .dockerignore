@@ -1,0 +1,8 @@
+**/node_modules
+**/.next
+**/out
+**/data
+**/.env
+**/.env.local
+contracts
+.git
